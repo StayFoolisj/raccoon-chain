@@ -30,7 +30,7 @@ contract('TokenFarm', ([owner, investor]) => {
     })
 
     // Write tests here..
-    describe('Mock Dai Deployment', async () => {
+    describe('Mock DAI Deployment', async () => {
         it('Has a name', async () => {
             const name = await daiToken.name()
             assert.equal(name, 'Mock DAI Token')
@@ -87,7 +87,25 @@ contract('TokenFarm', ([owner, investor]) => {
             // Check balances after issuance
             result = await dappToken.balanceOf(investor)
             assert.equal(result.toString(), tokens('100'), 'investor Dapp Token wallet balance correct after issuance')
-        
+            
+            // Ensure that only owner can issue tokens
+            await tokenFarm.issueTokens({ from: investor }).should.be.rejected;
+
+            // Unstake Tokens
+            await tokenFarm.unstakeTokens({ from: investor })
+
+            // Check results after usntaking
+            result = await daiToken.balanceOf(investor)
+            assert.equal(result.toString(), tokens('100'), 'investor Mock DAI wallet balance correct after staking')
+
+            result = await daiToken.balanceOf(tokenFarm.address)
+            assert.equal(result.toString(), tokens('0'), 'Token Farm Mock DAI balance correct after staking')
+
+            result = await tokenFarm.stakingBalance(investor)
+            assert.equal(result.toString(), tokens('0'), 'investor staking balance correct after staking')
+
+            result = await tokenFarm.isStaking(investor)
+            assert.equal(result.toString(), 'false', 'investor staking status correct after staking')
         })
     })
 })
